@@ -5,6 +5,7 @@ Sprint 0/1 bootstrap voor een domain-gedreven, multi-tenant platform.
 ## Inhoud
 
 - PRD documentatie (`PRD_v4.md`, `PRD_DataContracts.md`, `PRD_ErrorModel.md`, `SERVICE_CONTRACTS.md`, `audit.prd`)
+- Implementatie-roadmap (`IMPLEMENTATION_NEXT_STEPS.md`)
 - TypeScript/Zod contractlaag voor kernentiteiten
 - Service interfaces voor Party, Opportunity, Offer, WorkItem, Invoice, Page en Domain
 - Contracttests met `vitest`
