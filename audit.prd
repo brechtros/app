@@ -1,0 +1,194 @@
+# Product Requirements Document — Audit Model
+
+## Havona Event & Audit Trail Contract
+
+**Versie:** 1.0  
+**Datum:** 2026-02-18  
+**Status:** Verplicht systeemgedrag
+
+---
+
+## 1. Doel
+
+Het systeem moet kunnen reconstrueren:
+
+Wie deed wat, wanneer, en wat was de toestand toen.
+
+Audit is geen debug logging maar bedrijfsbewijs.
+
+---
+
+## 2. Kernprincipes
+1. Audit events zijn immutable
+2. Data mutaties ≠ audit events
+3. Elke belangrijke actie produceert een event
+4. Events beschrijven intentie, niet alleen verandering
+5. Audit mag nooit verwijderd worden
+
+---
+
+## 3. Event structuur
+
+Elke audit entry volgt exact dit formaat:
+
+```json
+{
+  "id": "evt_xxx",
+  "tenantId": "t_xxx",
+  "entity": "Invoice",
+  "entityId": "inv_xxx",
+  "action": "INVOICE_SENT",
+  "actorId": "usr_xxx",
+  "timestamp": "2026-02-18T12:00:00Z",
+  "payload": {},
+  "meta": {}
+}
+```
+
+### Velden
+
+| veld | betekenis |
+|---|---|
+| entity | type object |
+| entityId | betrokken record |
+| action | wat gebeurde |
+| actorId | gebruiker |
+| payload | relevante data |
+| meta | context (ip, userAgent, source, traceId) |
+
+---
+
+## 4. Auditbare entiteiten
+
+| Entiteit | Audit verplicht |
+|---|---|
+| Party | belangrijke wijzigingen |
+| Opportunity | status |
+| Offer | revisies + acceptatie |
+| WorkItem | lifecycle |
+| Invoice | financieel |
+| Payment | altijd |
+| Domain | verificatie |
+
+---
+
+## 5. Acties (contractueel)
+
+### Party
+- PARTY_CREATED
+- PARTY_UPDATED
+- PARTY_ROLE_ASSIGNED
+
+### Opportunity
+- OPPORTUNITY_CREATED
+- OPPORTUNITY_STAGE_CHANGED
+
+### Offer
+- OFFER_CREATED
+- OFFER_REVISED
+- OFFER_ACCEPTED
+- OFFER_REJECTED
+
+### WorkItem
+- WORKITEM_CREATED
+- WORKITEM_ACTIVATED
+- WORKITEM_COMPLETED
+- WORKITEM_CANCELLED
+
+### Invoice
+- INVOICE_CREATED
+- INVOICE_SENT
+- INVOICE_VOIDED
+
+### Payment
+- PAYMENT_REGISTERED
+
+### Domain
+- DOMAIN_ADDED
+- DOMAIN_VERIFIED
+
+---
+
+## 6. Payload regels
+
+Payload bevat alleen relevante snapshot data.
+
+Voorbeeld:
+
+```json
+{
+  "invoiceNumber": "2026-000123",
+  "totalCents": 125000,
+  "currency": "EUR"
+}
+```
+
+Geen volledige database records opslaan.
+
+---
+
+## 7. Immutable gedrag
+
+Audit events:
+- nooit wijzigen
+- nooit verwijderen
+- enkel append
+
+Database niveau: geen UPDATE/DELETE toegestaan.
+
+---
+
+## 8. Tijd
+
+Alle timestamps:
+- UTC
+- server bepaald
+- client mag niet bepalen
+
+---
+
+## 9. Correlatie
+
+Elke HTTP request krijgt traceId.
+
+Alle events binnen request delen dit:
+
+`meta: { "traceId": "req_123" }`
+
+---
+
+## 10. Toegang
+
+| Rol | Toegang |
+|---|---|
+| OWNER | alles |
+| ADMIN | tenant |
+| MEMBER | beperkt |
+
+Audit mag nooit publiek zichtbaar zijn.
+
+---
+
+## 11. Retentie
+
+Audit data:
+- nooit automatisch verwijderen
+- exporteerbaar
+- indexeerbaar
+
+---
+
+## 12. Acceptatiecriteria
+1. Elke financiële actie heeft audit event
+2. Statuswijzigingen traceerbaar
+3. Factuurhistoriek reconstrueerbaar
+4. Support kan volledige flow zien
+
+---
+
+## 13. Samenvatting
+
+De database toont huidige toestand.
+De audit toont hoe die toestand ontstond.
+
+Audit events vormen de historische waarheid van het systeem.
